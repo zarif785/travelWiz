@@ -25,6 +25,9 @@ A modern, production-grade AI Travel Assistant web application built with React,
 # Install dependencies
 npm install
 
+# Start backend API (in another terminal)
+npm run dev:server
+
 # Start development server
 npm run dev
 
@@ -68,6 +71,78 @@ src/
 ## 🔧 Development
 
 The application is currently in the **foundation phase**. The core UX and app shell are complete, ready for feature implementation.
+
+## 🤖 Itinerary API (Feature 3)
+
+Backend endpoints:
+
+- `POST /api/itinerary/generate`
+- `POST /api/itinerary/refine`
+
+Environment:
+
+- Copy `.env.example` to `.env`
+- Set `OPENAI_API_KEY`
+
+Example generate request:
+
+```json
+{
+  "tripProfile": {
+    "id": "trip_123",
+    "createdAt": "2026-02-11T08:00:00.000Z",
+    "destinations": [{ "city": "Tokyo", "country": "Japan" }],
+    "dateMode": "duration",
+    "durationDays": 3,
+    "currency": "JPY",
+    "budgetTotal": 90000,
+    "travelType": "sightseeing",
+    "pace": "balanced",
+    "interests": ["food", "museums"],
+    "constraints": {
+      "withKids": false,
+      "mustSee": ["Senso-ji Temple"],
+      "avoid": []
+    },
+    "companionsCount": 2,
+    "preferences": {
+      "walkingTolerance": 6,
+      "dayStartPreference": 5,
+      "comfortVsBudget": 5
+    }
+  }
+}
+```
+
+Example response (shape):
+
+```json
+{
+  "itinerary": {
+    "id": "uuid",
+    "tripId": "trip_123",
+    "destinationSummary": "3-day Tokyo culture + food itinerary",
+    "totals": {
+      "estimatedTotalCost": 78000,
+      "estimatedDailyAverageCost": 26000,
+      "currency": "JPY"
+    },
+    "days": [
+      {
+        "dayNumber": 1,
+        "morning": [],
+        "afternoon": [],
+        "evening": []
+      }
+    ],
+    "places": []
+  },
+  "meta": {
+    "model": "gpt-4.1-mini",
+    "createdAt": "2026-02-11T08:10:00.000Z"
+  }
+}
+```
 
 ### Next Steps:
 1. Implement trip planning form

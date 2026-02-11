@@ -1,6 +1,6 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { AuthProvider, TripProvider, TripProfileProvider } from '@/context';
+import { AuthProvider, ItineraryProvider, TripProvider, TripProfileProvider } from '@/context';
 import { AppRouter } from '@/routes';
 
 // Create a client
@@ -19,7 +19,9 @@ const App: React.FC = () => {
       <AuthProvider>
         <TripProvider>
           <TripProfileProvider>
-            <AppRouter />
+                <ItineraryProvider>
+                  <AppRouter />
+                </ItineraryProvider>
           </TripProfileProvider>
         </TripProvider>
       </AuthProvider>

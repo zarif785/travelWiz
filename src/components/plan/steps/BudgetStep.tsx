@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import type { UseFormRegister, UseFormWatch, UseFormSetValue } from 'react-hook-form';
-import type { TripFormData, Currency } from '@/types/trip';
+import type { TripFormData } from '@/types/trip';
 import { Input, Toggle } from '@/components/ui';
 import { CURRENCY_OPTIONS } from '@/types/trip';
 import { calculatePerDayBudget } from '@/utils/tripProfile';

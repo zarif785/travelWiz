@@ -14,7 +14,7 @@ export const ConstraintsStep: React.FC<ConstraintsStepProps> = ({
     register,
     watch,
     setValue,
-    errors,
+    errors: _errors,
 }) => {
     const withKids = watch('withKids') || false;
     const mustSee = watch('mustSee') || [];

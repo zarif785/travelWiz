@@ -1,6 +1,6 @@
 import React from 'react';
 import type { UseFormRegister, UseFormWatch, UseFormSetValue } from 'react-hook-form';
-import type { TripFormData, TravelType, Pace } from '@/types/trip';
+import type { TripFormData } from '@/types/trip';
 import { MultiSelect } from '@/components/ui';
 import { TRAVEL_TYPES, PACE_OPTIONS, INTEREST_OPTIONS } from '@/types/trip';
 
@@ -12,7 +12,7 @@ interface StyleStepProps {
 }
 
 export const StyleStep: React.FC<StyleStepProps> = ({
-    register,
+    register: _register,
     watch,
     setValue,
     errors,

@@ -8,14 +8,20 @@ interface ReviewStepProps {
     formData: TripFormData;
     tripProfile: TripProfile | null;
     onSave: () => void;
+    onGenerateItinerary: () => void;
     isSaved: boolean;
+    isGeneratingItinerary: boolean;
+    generateError?: string;
 }
 
 export const ReviewStep: React.FC<ReviewStepProps> = ({
     formData,
     tripProfile,
     onSave,
+    onGenerateItinerary,
     isSaved,
+    isGeneratingItinerary,
+    generateError,
 }) => {
     const [showJSON, setShowJSON] = useState(false);
 
@@ -121,6 +127,34 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
                     </div>
                 </div>
             )}
+
+            <div className="space-y-3">
+                <Button
+                    onClick={onGenerateItinerary}
+                    size="lg"
+                    className="w-full"
+                    isLoading={isGeneratingItinerary}
+                    disabled={!tripProfile}
+                >
+                    Generate Itinerary
+                </Button>
+                {isGeneratingItinerary && (
+                    <div className="grid md:grid-cols-3 gap-3">
+                        {[0, 1, 2].map((item) => (
+                            <div key={item} className="rounded-xl border border-neutral-200 p-4 animate-pulse">
+                                <div className="h-4 bg-neutral-200 rounded w-1/2 mb-3"></div>
+                                <div className="h-3 bg-neutral-100 rounded w-full mb-2"></div>
+                                <div className="h-3 bg-neutral-100 rounded w-4/5"></div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                {generateError && (
+                    <p className="text-sm text-red-600">
+                        {generateError}
+                    </p>
+                )}
+            </div>
 
             {/* Developer Preview */}
             {tripProfile && (

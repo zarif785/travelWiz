@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import type { TripFormData, TripProfile } from '@/types/trip';
 import {
     destinationsStepSchema,
@@ -9,8 +10,9 @@ import {
     styleStepSchema,
     constraintsStepSchema,
 } from '@/types/trip';
-import { useTripProfile } from '@/context';
+import { useItinerary, useTripProfile } from '@/context';
 import { buildTripProfile } from '@/utils/tripProfile';
+import { generateItineraryRequest } from '@/services/itineraryApi';
 import { WizardLayout } from './WizardLayout';
 import { DestinationsStep } from './steps/DestinationsStep';
 import { DatesStep } from './steps/DatesStep';
@@ -48,11 +50,15 @@ const DEFAULT_VALUES: Partial<TripFormData> = {
 };
 
 export const TripWizard: React.FC = () => {
+    const navigate = useNavigate();
     const [currentStep, setCurrentStep] = useState(0);
     const [isSaved, setIsSaved] = useState(false);
     const [generatedProfile, setGeneratedProfile] = useState<TripProfile | null>(null);
+    const [generateError, setGenerateError] = useState<string | undefined>();
+    const draftSaveTimerRef = useRef<number | null>(null);
 
     const { draftFormData, saveDraft, saveFinalTripProfile, clearDraft } = useTripProfile();
+    const { saveItinerary } = useItinerary();
 
     const {
         register,
@@ -77,12 +83,22 @@ export const TripWizard: React.FC = () => {
     // Auto-save draft (debounced)
     useEffect(() => {
         const subscription = watch((value) => {
-            const timer = setTimeout(() => {
+            if (draftSaveTimerRef.current !== null) {
+                window.clearTimeout(draftSaveTimerRef.current);
+            }
+
+            draftSaveTimerRef.current = window.setTimeout(() => {
                 saveDraft(value as Partial<TripFormData>);
-            }, 500);
-            return () => clearTimeout(timer);
+            }, 700);
         });
-        return () => subscription.unsubscribe();
+
+        return () => {
+            if (draftSaveTimerRef.current !== null) {
+                window.clearTimeout(draftSaveTimerRef.current);
+                draftSaveTimerRef.current = null;
+            }
+            subscription.unsubscribe();
+        };
     }, [watch, saveDraft]);
 
     const handleNext = async () => {
@@ -111,6 +127,32 @@ export const TripWizard: React.FC = () => {
             saveFinalTripProfile(generatedProfile);
             setIsSaved(true);
         }
+    };
+
+    const generateMutation = useMutation({
+        mutationFn: async (tripProfile: TripProfile) => generateItineraryRequest({ tripProfile }),
+        onSuccess: (response) => {
+            setGenerateError(undefined);
+            saveItinerary(response.itinerary);
+            navigate(`/itinerary/${response.itinerary.id}`);
+        },
+        onError: (error) => {
+            setGenerateError(
+                error instanceof Error
+                    ? error.message
+                    : 'Could not generate itinerary right now. Please try again.'
+            );
+        },
+    });
+
+    const handleGenerateItinerary = () => {
+        if (!generatedProfile) return;
+        setGenerateError(undefined);
+        if (!isSaved) {
+            saveFinalTripProfile(generatedProfile);
+            setIsSaved(true);
+        }
+        generateMutation.mutate(generatedProfile);
     };
 
     const handleReset = () => {
@@ -148,7 +190,10 @@ export const TripWizard: React.FC = () => {
                         formData={getValues() as TripFormData}
                         tripProfile={generatedProfile}
                         onSave={handleSave}
+                        onGenerateItinerary={handleGenerateItinerary}
                         isSaved={isSaved}
+                        isGeneratingItinerary={generateMutation.isPending}
+                        generateError={generateError}
                     />
                 );
             default:
