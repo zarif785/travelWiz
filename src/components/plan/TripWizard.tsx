@@ -58,7 +58,7 @@ export const TripWizard: React.FC = () => {
     const draftSaveTimerRef = useRef<number | null>(null);
 
     const { draftFormData, saveDraft, saveFinalTripProfile, clearDraft } = useTripProfile();
-    const { saveItinerary } = useItinerary();
+    const { getItineraryByTripId, saveItinerary } = useItinerary();
 
     const {
         register,
@@ -152,7 +152,19 @@ export const TripWizard: React.FC = () => {
             saveFinalTripProfile(generatedProfile);
             setIsSaved(true);
         }
+        const existingItinerary = getItineraryByTripId(generatedProfile.id);
+        if (existingItinerary) {
+            navigate(`/itinerary/${existingItinerary.id}`);
+            return;
+        }
         generateMutation.mutate(generatedProfile);
+    };
+
+    const handleViewItinerary = () => {
+        if (!generatedProfile) return;
+        const existingItinerary = getItineraryByTripId(generatedProfile.id);
+        if (!existingItinerary) return;
+        navigate(`/itinerary/${existingItinerary.id}`);
     };
 
     const handleReset = () => {
@@ -173,6 +185,10 @@ export const TripWizard: React.FC = () => {
             errors,
         };
 
+        const savedItineraryForTrip = generatedProfile
+            ? getItineraryByTripId(generatedProfile.id)
+            : null;
+
         switch (currentStep) {
             case 0:
                 return <DestinationsStep {...commonProps} />;
@@ -191,6 +207,8 @@ export const TripWizard: React.FC = () => {
                         tripProfile={generatedProfile}
                         onSave={handleSave}
                         onGenerateItinerary={handleGenerateItinerary}
+                        onViewItinerary={handleViewItinerary}
+                        hasSavedItinerary={!!savedItineraryForTrip}
                         isSaved={isSaved}
                         isGeneratingItinerary={generateMutation.isPending}
                         generateError={generateError}

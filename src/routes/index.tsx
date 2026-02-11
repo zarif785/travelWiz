@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Layout } from '@/components/layout';
-import { Auth, Home, PlanTrip, ItineraryResult, MyTrips, NotFound } from '@/pages';
+import { Auth, Home, MapPage, PlanTrip, ItineraryPage, MyTrips, NotFound } from '@/pages';
 
 const router = createBrowserRouter([
     {
@@ -22,11 +22,15 @@ const router = createBrowserRouter([
             },
             {
                 path: 'plan/result',
-                element: <ItineraryResult />,
+                element: <ItineraryPage />,
             },
             {
                 path: 'itinerary/:id',
-                element: <ItineraryResult />,
+                element: <ItineraryPage />,
+            },
+            {
+                path: 'itinerary/:id/map',
+                element: <MapPage />,
             },
             {
                 path: 'trips',

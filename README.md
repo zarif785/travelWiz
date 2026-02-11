@@ -144,6 +144,69 @@ Example response (shape):
 }
 ```
 
+## 🗺 Maps Module (Feature 5)
+
+Map route:
+
+- `GET /itinerary/:id/map` (frontend page)
+
+Places API endpoint:
+
+- `POST /api/places/resolve`
+- `GET /api/places/:placeId` (cache lookup)
+
+Environment:
+
+- `GOOGLE_MAPS_API_KEY` for backend geocoding + Google Place Details/Photo API calls
+- `VITE_GOOGLE_MAPS_API_KEY` for frontend map rendering
+- `PLACES_CACHE_FILE` for local cache persistence (default: `server/data/place-cache.json`)
+
+Google Cloud APIs required:
+
+- Geocoding API
+- Maps JavaScript API
+- Places API (for real place photos/highlights)
+
+Example places resolve request:
+
+```json
+{
+  "queries": [
+    {
+      "placeQuery": "Sydney Opera House",
+      "area": "Sydney CBD",
+      "hintLat": -33.8568,
+      "hintLng": 151.2153
+    }
+  ]
+}
+```
+
+Example places resolve response:
+
+```json
+{
+  "results": [
+    {
+      "placeId": "3f4aa9",
+      "placeQuery": "Sydney Opera House",
+      "name": "Sydney Opera House, Bennelong Point, Sydney NSW, Australia",
+      "lat": -33.8568,
+      "lng": 151.2153,
+      "providerId": "poi.123",
+      "images": ["https://..."],
+      "highlights": ["Popular stop for Sydney Opera House."],
+      "source": "cache"
+    }
+  ]
+}
+```
+
+Directions / route lines note:
+
+- UI includes a "Show route for selected day (coming soon)" placeholder.
+- Later implementation can call Google Directions API using filtered day pins ordered by itinerary section.
+
 ### Next Steps:
 1. Implement trip planning form
 2. Integrate AI service for itinerary generation

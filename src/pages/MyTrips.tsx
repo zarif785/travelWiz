@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Container, PageWrapper, EmptyState, Card, Button } from '@/components/ui';
 import { useNavigate } from 'react-router-dom';
@@ -11,9 +11,21 @@ export const MyTrips: React.FC = () => {
     const navigate = useNavigate();
     const { isAuthenticated } = useAuth();
     const { allTripProfiles, refreshTrips } = useTripProfile();
-    const { saveItinerary } = useItinerary();
+    const { itineraryMap, saveItinerary } = useItinerary();
     const [error, setError] = useState<string | null>(null);
     const [generatingTripId, setGeneratingTripId] = useState<string | null>(null);
+
+    const itineraryIdByTripId = useMemo(() => {
+        const mapping = new Map<string, string>();
+        Object.values(itineraryMap).forEach((itinerary) => {
+            if (!itinerary.tripId) return;
+            // Keep the first discovered itinerary for a trip as the reusable saved plan.
+            if (!mapping.has(itinerary.tripId)) {
+                mapping.set(itinerary.tripId, itinerary.id);
+            }
+        });
+        return mapping;
+    }, [itineraryMap]);
 
     const generateMutation = useMutation({
         mutationFn: async (tripProfile: TripProfile) => generateItineraryRequest({ tripProfile }),
@@ -41,6 +53,15 @@ export const MyTrips: React.FC = () => {
         if (!confirm('Delete this saved trip profile?')) return;
         deleteTripProfile(id);
         refreshTrips();
+    };
+
+    const handleGenerateOrOpen = (trip: TripProfile) => {
+        const existingItineraryId = itineraryIdByTripId.get(trip.id);
+        if (existingItineraryId) {
+            navigate(`/itinerary/${existingItineraryId}`);
+            return;
+        }
+        generateMutation.mutate(trip);
     };
 
     if (allTripProfiles.length === 0) {
@@ -82,8 +103,10 @@ export const MyTrips: React.FC = () => {
                     {allTripProfiles
                         .slice()
                         .reverse()
-                        .map((trip) => (
-                            <Card key={trip.id}>
+                        .map((trip) => {
+                            const existingItineraryId = itineraryIdByTripId.get(trip.id);
+                            return (
+                                <Card key={trip.id}>
                                 <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
                                     <div>
                                         <h3 className="text-lg font-semibold text-neutral-900">
@@ -95,13 +118,28 @@ export const MyTrips: React.FC = () => {
                                         <p className="text-sm text-neutral-500 mt-1">
                                             Created {new Date(trip.createdAt).toLocaleString()}
                                         </p>
+                                        {existingItineraryId && (
+                                            <p className="text-xs text-green-700 mt-2">
+                                                Saved itinerary is available.
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         <Button
-                                            onClick={() => generateMutation.mutate(trip)}
+                                            onClick={() => handleGenerateOrOpen(trip)}
                                             isLoading={generatingTripId === trip.id}
                                         >
-                                            Generate Itinerary
+                                            {existingItineraryId ? 'Open Saved Itinerary' : 'Generate Itinerary'}
+                                        </Button>
+                                        <Button
+                                            variant="secondary"
+                                            onClick={() => {
+                                                if (!existingItineraryId) return;
+                                                navigate(`/itinerary/${existingItineraryId}`);
+                                            }}
+                                            disabled={!existingItineraryId || generatingTripId === trip.id}
+                                        >
+                                            View
                                         </Button>
                                         <Button
                                             variant="secondary"
@@ -112,8 +150,9 @@ export const MyTrips: React.FC = () => {
                                         </Button>
                                     </div>
                                 </div>
-                            </Card>
-                        ))}
+                                </Card>
+                            );
+                        })}
                 </div>
                 {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
             </PageWrapper>

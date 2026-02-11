@@ -9,6 +9,8 @@ interface ReviewStepProps {
     tripProfile: TripProfile | null;
     onSave: () => void;
     onGenerateItinerary: () => void;
+    onViewItinerary: () => void;
+    hasSavedItinerary: boolean;
     isSaved: boolean;
     isGeneratingItinerary: boolean;
     generateError?: string;
@@ -19,6 +21,8 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
     tripProfile,
     onSave,
     onGenerateItinerary,
+    onViewItinerary,
+    hasSavedItinerary,
     isSaved,
     isGeneratingItinerary,
     generateError,
@@ -129,15 +133,26 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             )}
 
             <div className="space-y-3">
-                <Button
-                    onClick={onGenerateItinerary}
-                    size="lg"
-                    className="w-full"
-                    isLoading={isGeneratingItinerary}
-                    disabled={!tripProfile}
-                >
-                    Generate Itinerary
-                </Button>
+                <div className="flex flex-col sm:flex-row gap-2">
+                    <Button
+                        onClick={onGenerateItinerary}
+                        size="lg"
+                        className="w-full"
+                        isLoading={isGeneratingItinerary}
+                        disabled={!tripProfile}
+                    >
+                        {hasSavedItinerary ? 'Open Saved Itinerary' : 'Generate Itinerary'}
+                    </Button>
+                    <Button
+                        onClick={onViewItinerary}
+                        size="lg"
+                        variant="secondary"
+                        className="w-full sm:w-auto"
+                        disabled={!hasSavedItinerary || !tripProfile}
+                    >
+                        View
+                    </Button>
+                </div>
                 {isGeneratingItinerary && (
                     <div className="grid md:grid-cols-3 gap-3">
                         {[0, 1, 2].map((item) => (
