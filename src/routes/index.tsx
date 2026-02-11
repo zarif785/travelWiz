@@ -1,7 +1,7 @@
 import React from 'react';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import { Layout } from '@/components/layout';
-import { Home, PlanTrip, ItineraryResult, MyTrips, NotFound } from '@/pages';
+import { Auth, Home, PlanTrip, ItineraryResult, MyTrips, NotFound } from '@/pages';
 
 const router = createBrowserRouter([
     {
@@ -15,6 +15,10 @@ const router = createBrowserRouter([
             {
                 path: 'plan',
                 element: <PlanTrip />,
+            },
+            {
+                path: 'auth',
+                element: <Auth />,
             },
             {
                 path: 'plan/result',

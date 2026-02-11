@@ -158,6 +158,7 @@ function buildDeveloperPrompt(routeType: RouteType, extraInstruction?: string): 
         '- Make totals approximately equal to sum of activities.',
         '- Include varied tags per activity.',
         '- Place candidates should be deduplicated and map-safe.',
+        `Output JSON schema (target shape): ${JSON.stringify(itineraryJsonSchema)}`,
         routeType === 'refine'
             ? '- Keep the current itinerary structure and only adjust what instruction requests.'
             : '- Build a complete itinerary from scratch.',
@@ -549,14 +550,7 @@ async function requestItineraryFromModel(
                                   .join('\n'),
                           },
                       ],
-            response_format: {
-                type: 'json_schema',
-                json_schema: {
-                    name: 'itinerary_response',
-                    schema: itineraryJsonSchema,
-                    strict: true,
-                },
-            },
+            response_format: { type: 'json_object' },
             temperature: 0.2,
         });
 

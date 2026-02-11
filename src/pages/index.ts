@@ -1,3 +1,4 @@
+export { Auth } from './Auth';
 export { Home } from './Home';
 export { PlanTrip } from './PlanTrip';
 export { ItineraryResult } from './ItineraryResult';

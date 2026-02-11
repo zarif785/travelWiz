@@ -1,10 +1,13 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../ui';
+import { useAuth } from '@/context';
 
 export const Navbar: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const location = useLocation();
+    const navigate = useNavigate();
+    const { isAuthenticated, user, logout } = useAuth();
 
     const isActive = (path: string) => location.pathname === path;
 
@@ -42,7 +45,18 @@ export const Navbar: React.FC = () => {
                                 {link.label}
                             </Link>
                         ))}
-                        <Button size="sm">Login / Signup</Button>
+                        {isAuthenticated && user ? (
+                            <div className="flex items-center gap-3">
+                                <span className="text-sm text-neutral-600">Hi, {user.name}</span>
+                                <Button size="sm" variant="secondary" onClick={logout}>
+                                    Logout
+                                </Button>
+                            </div>
+                        ) : (
+                            <Button size="sm" onClick={() => navigate('/auth')}>
+                                Login / Signup
+                            </Button>
+                        )}
                     </div>
 
                     {/* Mobile Menu Button */}
@@ -87,9 +101,33 @@ export const Navbar: React.FC = () => {
                                 </Link>
                             ))}
                             <div className="px-4">
-                                <Button size="sm" className="w-full">
-                                    Login / Signup
-                                </Button>
+                                {isAuthenticated && user ? (
+                                    <div className="space-y-2">
+                                        <p className="text-sm text-neutral-600">Hi, {user.name}</p>
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            className="w-full"
+                                            onClick={() => {
+                                                logout();
+                                                setIsMenuOpen(false);
+                                            }}
+                                        >
+                                            Logout
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <Button
+                                        size="sm"
+                                        className="w-full"
+                                        onClick={() => {
+                                            setIsMenuOpen(false);
+                                            navigate('/auth');
+                                        }}
+                                    >
+                                        Login / Signup
+                                    </Button>
+                                )}
                             </div>
                         </div>
                     </div>
