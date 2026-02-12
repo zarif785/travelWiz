@@ -1,6 +1,6 @@
-# AI Travel Assistant
+# Travel Wiz
 
-A modern, production-grade AI Travel Assistant web application built with React, TypeScript, and Tailwind CSS.
+A modern, production-grade Travel Wiz web application built with React, TypeScript, and Tailwind CSS.
 
 ## 🚀 Features
 

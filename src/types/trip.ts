@@ -24,6 +24,7 @@ export interface DestinationItem {
 
 export interface TripProfile {
     id: string; // uuid
+    userId?: string; // owner user id for scoped trip lists
     createdAt: string; // ISO
     destinations: DestinationItem[];
 

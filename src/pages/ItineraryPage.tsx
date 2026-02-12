@@ -27,7 +27,6 @@ import { BudgetWarningBanner } from '@/components/itinerary/BudgetWarningBanner'
 import { ItineraryHeader } from '@/components/itinerary/ItineraryHeader';
 import { DayCard } from '@/components/itinerary/DayCard';
 import { AddActivityModal } from '@/components/itinerary/AddActivityModal';
-import { EditActivityModal } from '@/components/itinerary/EditActivityModal';
 import { ReplaceActivityModal } from '@/components/itinerary/ReplaceActivityModal';
 import type { SectionKey } from '@/components/itinerary/SectionTimeline';
 
@@ -36,7 +35,7 @@ interface SectionTarget {
     section: SectionKey;
 }
 
-interface EditTarget extends SectionTarget {
+interface ReplaceTarget extends SectionTarget {
     activity: Activity;
 }
 
@@ -167,8 +166,7 @@ export const ItineraryPage: React.FC = () => {
     const [sectionExpanded, setSectionExpanded] = useState<Record<string, boolean>>({});
     const [friendlyError, setFriendlyError] = useState<string | null>(null);
     const [addTarget, setAddTarget] = useState<SectionTarget | null>(null);
-    const [editTarget, setEditTarget] = useState<EditTarget | null>(null);
-    const [replaceTarget, setReplaceTarget] = useState<EditTarget | null>(null);
+    const [replaceTarget, setReplaceTarget] = useState<ReplaceTarget | null>(null);
 
     const itinerary = useMemo(() => {
         if (id) return getItineraryById(id);
@@ -307,25 +305,6 @@ export const ItineraryPage: React.FC = () => {
         persistUpdate(next);
     };
 
-    const handleEdit = (updated: Activity) => {
-        if (!editTarget) return;
-        const next: Itinerary = {
-            ...itinerary,
-            days: itinerary.days.map((day) =>
-                day.dayNumber !== editTarget.dayNumber
-                    ? day
-                    : {
-                          ...day,
-                          [editTarget.section]: day[editTarget.section].map((activity) =>
-                              activity.id === updated.id ? updated : activity
-                          ),
-                      }
-            ),
-        };
-        persistUpdate(next);
-        setEditTarget(null);
-    };
-
     const handleDragEnd = (event: DragEndEvent) => {
         const activeId = String(event.active.id);
         const overId = event.over ? String(event.over.id) : null;
@@ -396,7 +375,6 @@ export const ItineraryPage: React.FC = () => {
                     totalCost={totalCost}
                     dailyAverage={dailyAverage}
                     dayBreakdown={dayBreakdown}
-                    onOpenMap={() => navigate(`/itinerary/${itinerary.id}/map`)}
                     onExpandAll={expandAll}
                     onCollapseAll={collapseAll}
                 />
@@ -450,9 +428,6 @@ export const ItineraryPage: React.FC = () => {
                                 onReplaceActivity={(section, activity) =>
                                     setReplaceTarget({ dayNumber: day.dayNumber, section, activity })
                                 }
-                                onEditActivity={(section, activity) =>
-                                    setEditTarget({ dayNumber: day.dayNumber, section, activity })
-                                }
                             />
                         ))}
                     </div>
@@ -465,13 +440,6 @@ export const ItineraryPage: React.FC = () => {
                 section={addTarget?.section ?? null}
                 onClose={() => setAddTarget(null)}
                 onSave={handleAdd}
-            />
-
-            <EditActivityModal
-                isOpen={!!editTarget}
-                activity={editTarget?.activity ?? null}
-                onClose={() => setEditTarget(null)}
-                onSave={handleEdit}
             />
 
             <ReplaceActivityModal

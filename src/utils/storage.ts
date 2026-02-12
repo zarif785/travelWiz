@@ -37,20 +37,31 @@ export function clearDraftFromStorage(): void {
 // Trip Profile Management
 // ============================================================================
 
-export function saveTripProfile(profile: TripProfile): void {
+interface StoredTripProfile extends TripProfile {
+    userId?: string;
+}
+
+export function saveTripProfile(profile: TripProfile, userId?: string): void {
     try {
-        const trips = loadTripProfiles();
-        trips.push(profile);
+        const trips = loadTripProfiles(undefined, true);
+        const stored: StoredTripProfile = {
+            ...profile,
+            userId: userId ?? profile.userId,
+        };
+        trips.push(stored);
         localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify(trips));
     } catch (error) {
         console.error('Failed to save trip profile:', error);
     }
 }
 
-export function loadTripProfiles(): TripProfile[] {
+export function loadTripProfiles(userId?: string, includeAll = false): TripProfile[] {
     try {
         const trips = localStorage.getItem(TRIPS_STORAGE_KEY);
-        return trips ? JSON.parse(trips) : [];
+        const parsed = trips ? (JSON.parse(trips) as StoredTripProfile[]) : [];
+        if (includeAll) return parsed;
+        if (!userId) return [];
+        return parsed.filter((trip) => trip.userId === userId);
     } catch (error) {
         console.error('Failed to load trip profiles:', error);
         return [];
@@ -59,7 +70,7 @@ export function loadTripProfiles(): TripProfile[] {
 
 export function deleteTripProfile(id: string): void {
     try {
-        const trips = loadTripProfiles();
+        const trips = loadTripProfiles(undefined, true);
         const filtered = trips.filter((trip) => trip.id !== id);
         localStorage.setItem(TRIPS_STORAGE_KEY, JSON.stringify(filtered));
     } catch (error) {
@@ -69,7 +80,7 @@ export function deleteTripProfile(id: string): void {
 
 export function getTripProfile(id: string): TripProfile | null {
     try {
-        const trips = loadTripProfiles();
+        const trips = loadTripProfiles(undefined, true);
         return trips.find((trip) => trip.id === id) || null;
     } catch (error) {
         console.error('Failed to get trip profile:', error);

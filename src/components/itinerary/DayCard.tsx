@@ -13,7 +13,6 @@ interface DayCardProps {
     onAddActivity: (section: SectionKey) => void;
     onRemoveActivity: (section: SectionKey, activityId: string) => void;
     onReplaceActivity: (section: SectionKey, activity: Activity) => void;
-    onEditActivity: (section: SectionKey, activity: Activity) => void;
 }
 
 const SECTION_META: Array<{ key: SectionKey; label: string }> = [
@@ -31,11 +30,10 @@ export const DayCard: React.FC<DayCardProps> = ({
     onAddActivity,
     onRemoveActivity,
     onReplaceActivity,
-    onEditActivity,
 }) => {
     return (
         <Card>
-            <div className="flex items-center justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <button
                     type="button"
                     className="text-left"
@@ -50,7 +48,7 @@ export const DayCard: React.FC<DayCardProps> = ({
                 </button>
                 <button
                     type="button"
-                    className="text-sm px-3 py-1 rounded-md border border-neutral-300"
+                    className="text-sm px-3 py-1 rounded-md border border-neutral-300 self-start sm:self-auto"
                     onClick={onToggleDay}
                 >
                     {isExpanded ? 'Collapse' : 'Expand'}
@@ -72,7 +70,6 @@ export const DayCard: React.FC<DayCardProps> = ({
                             onAdd={() => onAddActivity(meta.key)}
                             onRemoveActivity={(activityId) => onRemoveActivity(meta.key, activityId)}
                             onReplaceActivity={(activity) => onReplaceActivity(meta.key, activity)}
-                            onEditActivity={(activity) => onEditActivity(meta.key, activity)}
                         />
                     ))}
                 </div>

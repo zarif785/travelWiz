@@ -9,7 +9,6 @@ interface ItineraryHeaderProps {
     dayBreakdown: Array<{ dayNumber: number; cost: number }>;
     onExpandAll: () => void;
     onCollapseAll: () => void;
-    onOpenMap: () => void;
 }
 
 function formatCurrency(amount: number, currency: string): string {
@@ -31,7 +30,6 @@ export const ItineraryHeader: React.FC<ItineraryHeaderProps> = ({
     dayBreakdown,
     onExpandAll,
     onCollapseAll,
-    onOpenMap,
 }) => {
     return (
         <Card>
@@ -41,14 +39,11 @@ export const ItineraryHeader: React.FC<ItineraryHeaderProps> = ({
                         <h1 className="text-2xl md:text-3xl font-bold text-neutral-900">Itinerary</h1>
                         <p className="text-neutral-600 mt-1">{itinerary.destinationSummary}</p>
                     </div>
-                    <div className="flex gap-2">
-                        <Button variant="secondary" size="sm" onClick={onOpenMap}>
-                            Map
-                        </Button>
-                        <Button variant="secondary" size="sm" onClick={onExpandAll}>
+                    <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
+                        <Button variant="secondary" size="sm" className="flex-1 sm:flex-none" onClick={onExpandAll}>
                             Expand all
                         </Button>
-                        <Button variant="secondary" size="sm" onClick={onCollapseAll}>
+                        <Button variant="secondary" size="sm" className="flex-1 sm:flex-none" onClick={onCollapseAll}>
                             Collapse all
                         </Button>
                     </div>
@@ -68,8 +63,8 @@ export const ItineraryHeader: React.FC<ItineraryHeaderProps> = ({
                         </p>
                     </div>
                     <div className="rounded-xl bg-neutral-50 p-3">
-                        <p className="text-xs uppercase tracking-wide text-neutral-500">Map candidates</p>
-                        <p className="text-lg font-semibold text-neutral-900">{itinerary.places.length}</p>
+                        <p className="text-xs uppercase tracking-wide text-neutral-500">Days planned</p>
+                        <p className="text-lg font-semibold text-neutral-900">{itinerary.days.length}</p>
                     </div>
                 </div>
 

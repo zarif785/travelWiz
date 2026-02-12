@@ -2,14 +2,13 @@ import React, { useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { Container, PageWrapper, EmptyState, Card, Button } from '@/components/ui';
 import { useNavigate } from 'react-router-dom';
-import { useAuth, useItinerary, useTripProfile } from '@/context';
+import { useItinerary, useTripProfile } from '@/context';
 import { deleteTripProfile } from '@/utils/storage';
 import { generateItineraryRequest } from '@/services/itineraryApi';
 import type { TripProfile } from '@/types/trip';
 
 export const MyTrips: React.FC = () => {
     const navigate = useNavigate();
-    const { isAuthenticated } = useAuth();
     const { allTripProfiles, refreshTrips } = useTripProfile();
     const { itineraryMap, saveItinerary } = useItinerary();
     const [error, setError] = useState<string | null>(null);
@@ -55,12 +54,7 @@ export const MyTrips: React.FC = () => {
         refreshTrips();
     };
 
-    const handleGenerateOrOpen = (trip: TripProfile) => {
-        const existingItineraryId = itineraryIdByTripId.get(trip.id);
-        if (existingItineraryId) {
-            navigate(`/itinerary/${existingItineraryId}`);
-            return;
-        }
+    const handleGenerateNewItinerary = (trip: TripProfile) => {
         generateMutation.mutate(trip);
     };
 
@@ -75,7 +69,7 @@ export const MyTrips: React.FC = () => {
                             </svg>
                         }
                         title="No Trips Yet"
-                        description="You haven't created any trips yet. Start planning your first adventure!"
+                        description="You have no trips saved on this account yet. Start planning your first adventure!"
                         actionLabel="Plan a Trip"
                         onAction={() => navigate('/plan')}
                     />
@@ -87,18 +81,6 @@ export const MyTrips: React.FC = () => {
     return (
         <Container>
             <PageWrapper title="My Trips">
-                {!isAuthenticated && (
-                    <Card className="mb-4 border border-amber-200 bg-amber-50">
-                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                            <p className="text-sm text-amber-900">
-                                You are browsing as guest. Trips are saved to this browser only.
-                            </p>
-                            <Button size="sm" variant="secondary" onClick={() => navigate('/auth')}>
-                                Login / Signup
-                            </Button>
-                        </div>
-                    </Card>
-                )}
                 <div className="space-y-4">
                     {allTripProfiles
                         .slice()
@@ -126,21 +108,20 @@ export const MyTrips: React.FC = () => {
                                     </div>
                                     <div className="flex flex-wrap gap-2">
                                         <Button
-                                            onClick={() => handleGenerateOrOpen(trip)}
+                                            onClick={() => handleGenerateNewItinerary(trip)}
                                             isLoading={generatingTripId === trip.id}
                                         >
-                                            {existingItineraryId ? 'Open Saved Itinerary' : 'Generate Itinerary'}
+                                            Generate New Itinerary
                                         </Button>
-                                        <Button
-                                            variant="secondary"
-                                            onClick={() => {
-                                                if (!existingItineraryId) return;
-                                                navigate(`/itinerary/${existingItineraryId}`);
-                                            }}
-                                            disabled={!existingItineraryId || generatingTripId === trip.id}
-                                        >
-                                            View
-                                        </Button>
+                                        {existingItineraryId && (
+                                            <Button
+                                                variant="secondary"
+                                                onClick={() => navigate(`/itinerary/${existingItineraryId}`)}
+                                                disabled={generatingTripId === trip.id}
+                                            >
+                                                View Previous Itinerary
+                                            </Button>
+                                        )}
                                         <Button
                                             variant="secondary"
                                             onClick={() => handleDeleteTrip(trip.id)}

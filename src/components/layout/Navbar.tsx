@@ -5,30 +5,36 @@ import { useAuth } from '@/context';
 
 export const Navbar: React.FC = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
     const location = useLocation();
     const navigate = useNavigate();
     const { isAuthenticated, user, logout } = useAuth();
 
     const isActive = (path: string) => location.pathname === path;
 
-    const navLinks = [
-        { path: '/', label: 'Home' },
-        { path: '/plan', label: 'Plan Trip' },
-        { path: '/trips', label: 'My Trips' },
-    ];
+    const navLinks = isAuthenticated
+        ? [
+              { path: '/plan', label: 'Plan Trip' },
+              { path: '/trips', label: 'My Trips' },
+          ]
+        : [{ path: '/', label: 'Home' }];
+
+    const handleLogout = () => {
+        logout();
+        setShowLogoutConfirm(false);
+        setIsMenuOpen(false);
+    };
 
     return (
         <nav className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-neutral-200">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex justify-between items-center h-16">
                     {/* Logo */}
-                    <Link to="/" className="flex items-center space-x-2">
+                    <Link to={isAuthenticated ? '/plan' : '/'} className="flex items-center space-x-2">
                         <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-xl">✈</span>
                         </div>
-                        <span className="text-xl font-bold text-neutral-900">
-                            AI Travel Assistant
-                        </span>
+                        <span className="text-xl font-bold text-neutral-900">Travel Wiz</span>
                     </Link>
 
                     {/* Desktop Navigation */}
@@ -48,7 +54,11 @@ export const Navbar: React.FC = () => {
                         {isAuthenticated && user ? (
                             <div className="flex items-center gap-3">
                                 <span className="text-sm text-neutral-600">Hi, {user.name}</span>
-                                <Button size="sm" variant="secondary" onClick={logout}>
+                                <Button
+                                    size="sm"
+                                    variant="secondary"
+                                    onClick={() => setShowLogoutConfirm(true)}
+                                >
                                     Logout
                                 </Button>
                             </div>
@@ -109,8 +119,7 @@ export const Navbar: React.FC = () => {
                                             variant="secondary"
                                             className="w-full"
                                             onClick={() => {
-                                                logout();
-                                                setIsMenuOpen(false);
+                                                setShowLogoutConfirm(true);
                                             }}
                                         >
                                             Logout
@@ -133,6 +142,29 @@ export const Navbar: React.FC = () => {
                     </div>
                 )}
             </div>
+            {showLogoutConfirm && (
+                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4">
+                    <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl text-center">
+                        <h3 className="text-lg font-semibold text-neutral-900">Logout?</h3>
+                        <p className="mt-2 text-sm text-neutral-600">
+                            Do you want to logout?
+                        </p>
+                        <div className="mt-4 flex justify-center gap-2">
+                            <Button
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                onClick={() => setShowLogoutConfirm(false)}
+                            >
+                                Cancel
+                            </Button>
+                            <Button type="button" size="sm" onClick={handleLogout}>
+                                Logout
+                            </Button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </nav>
     );
 };

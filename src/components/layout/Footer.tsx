@@ -12,11 +12,11 @@ export const Footer: React.FC = () => {
                         <div className="w-6 h-6 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg flex items-center justify-center">
                             <span className="text-white font-bold text-sm">✈</span>
                         </div>
-                        <span className="font-semibold text-white">AI Travel Assistant</span>
+                        <span className="font-semibold text-white">Travel Wiz</span>
                     </div>
 
                     <p className="text-sm">
-                        © {currentYear} AI Travel Assistant. All rights reserved.
+                        © {currentYear} Travel Wiz. All rights reserved.
                     </p>
 
                     <div className="flex space-x-6 text-sm">

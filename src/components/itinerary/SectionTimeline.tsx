@@ -18,7 +18,6 @@ interface SectionTimelineProps {
     onAdd: () => void;
     onRemoveActivity: (activityId: string) => void;
     onReplaceActivity: (activity: Activity) => void;
-    onEditActivity: (activity: Activity) => void;
 }
 
 export function getSectionContainerId(dayNumber: number, section: SectionKey): string {
@@ -36,17 +35,16 @@ export const SectionTimeline: React.FC<SectionTimelineProps> = ({
     onAdd,
     onRemoveActivity,
     onReplaceActivity,
-    onEditActivity,
 }) => {
     const containerId = getSectionContainerId(dayNumber, section);
     const { setNodeRef, isOver } = useDroppable({ id: containerId });
 
     return (
         <div className="rounded-xl border border-neutral-200 p-3 bg-neutral-50">
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <button
                     type="button"
-                    className="text-left"
+                    className="text-left min-w-0"
                     onClick={onToggle}
                     aria-expanded={isExpanded}
                 >
@@ -55,11 +53,11 @@ export const SectionTimeline: React.FC<SectionTimelineProps> = ({
                         {activities.length} activities • {Math.round(sectionCost)}
                     </p>
                 </button>
-                <div className="flex gap-2">
-                    <Button size="sm" variant="secondary" onClick={onAdd}>
+                <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
+                    <Button size="sm" variant="secondary" className="flex-1 sm:flex-none" onClick={onAdd}>
                         Add activity
                     </Button>
-                    <Button size="sm" variant="secondary" onClick={onToggle}>
+                    <Button size="sm" variant="secondary" className="flex-1 sm:flex-none" onClick={onToggle}>
                         {isExpanded ? 'Collapse' : 'Expand'}
                     </Button>
                 </div>
@@ -84,7 +82,6 @@ export const SectionTimeline: React.FC<SectionTimelineProps> = ({
                                         activity={activity}
                                         onRemove={() => onRemoveActivity(activity.id)}
                                         onReplace={() => onReplaceActivity(activity)}
-                                        onEdit={() => onEditActivity(activity)}
                                     />
                                 ))
                             )}

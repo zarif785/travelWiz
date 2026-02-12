@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Button, Card, Container, Input, PageWrapper } from '@/components/ui';
 import { useAuth } from '@/context';
 
@@ -7,12 +7,14 @@ type AuthMode = 'login' | 'signup';
 
 export const Auth: React.FC = () => {
     const navigate = useNavigate();
+    const location = useLocation();
     const { isAuthenticated, user, login, signup, logout } = useAuth();
     const [mode, setMode] = useState<AuthMode>('login');
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
@@ -27,7 +29,16 @@ export const Auth: React.FC = () => {
         }
 
         setError(null);
-        navigate('/trips');
+        const nextPath =
+            typeof (location.state as { from?: string } | null)?.from === 'string'
+                ? (location.state as { from: string }).from
+                : '/plan';
+        navigate(nextPath);
+    };
+
+    const handleLogout = () => {
+        logout();
+        setShowLogoutConfirm(false);
     };
 
     return (
@@ -41,7 +52,13 @@ export const Auth: React.FC = () => {
                             </p>
                             <div className="flex gap-3">
                                 <Button onClick={() => navigate('/trips')}>Go to My Trips</Button>
-                                <Button variant="secondary" onClick={logout}>Logout</Button>
+                                <Button
+                                    variant="secondary"
+                                    type="button"
+                                    onClick={() => setShowLogoutConfirm(true)}
+                                >
+                                    Logout
+                                </Button>
                             </div>
                         </div>
                     ) : (
@@ -99,6 +116,27 @@ export const Auth: React.FC = () => {
                         </form>
                     )}
                 </Card>
+                {showLogoutConfirm && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40 px-4">
+                        <div className="w-full max-w-sm rounded-xl bg-white p-5 shadow-xl text-center">
+                            <h3 className="text-lg font-semibold text-neutral-900">Logout?</h3>
+                            <p className="mt-2 text-sm text-neutral-600">Do you want to logout?</p>
+                            <div className="mt-4 flex justify-center gap-2">
+                                <Button
+                                    type="button"
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => setShowLogoutConfirm(false)}
+                                >
+                                    Cancel
+                                </Button>
+                                <Button type="button" size="sm" onClick={handleLogout}>
+                                    Logout
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </PageWrapper>
         </Container>
     );

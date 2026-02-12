@@ -1,9 +1,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Button, Card } from '@/components/ui';
+import { useAuth } from '@/context';
 
 export const Home: React.FC = () => {
     const navigate = useNavigate();
+    const { isAuthenticated } = useAuth();
 
     const features = [
         {
@@ -36,7 +38,10 @@ export const Home: React.FC = () => {
                             Experience the future of travel planning. Let our AI create personalized itineraries,
                             discover hidden gems, and make your dream vacation a reality.
                         </p>
-                        <Button size="lg" onClick={() => navigate('/plan')}>
+                        <Button
+                            size="lg"
+                            onClick={() => navigate(isAuthenticated ? '/plan' : '/auth')}
+                        >
                             Start Planning
                         </Button>
                     </div>

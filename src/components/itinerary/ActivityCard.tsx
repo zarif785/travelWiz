@@ -8,14 +8,17 @@ interface ActivityCardProps {
     activity: Activity;
     onRemove: () => void;
     onReplace: () => void;
-    onEdit: () => void;
+}
+
+function buildGoogleMapsUrl(activity: Activity): string {
+    const query = [activity.name, activity.placeQuery, activity.area].filter(Boolean).join(', ');
+    return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 }
 
 export const ActivityCard: React.FC<ActivityCardProps> = ({
     activity,
     onRemove,
     onReplace,
-    onEdit,
 }) => {
     const [expanded, setExpanded] = useState(false);
     const {
@@ -86,9 +89,6 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                 )}
 
                 <div className="mt-4 flex flex-wrap gap-2">
-                    <Button size="sm" variant="secondary" onClick={onEdit}>
-                        Edit
-                    </Button>
                     <Button size="sm" variant="secondary" onClick={onReplace}>
                         Replace
                     </Button>
@@ -98,8 +98,9 @@ export const ActivityCard: React.FC<ActivityCardProps> = ({
                     <button
                         type="button"
                         className="text-xs px-2 py-1 rounded-md border border-neutral-300 text-neutral-700 bg-neutral-50"
+                        onClick={() => window.open(buildGoogleMapsUrl(activity), '_blank', 'noopener,noreferrer')}
                     >
-                        Map
+                        Check on Google Maps
                     </button>
                 </div>
             </div>

@@ -1,7 +1,27 @@
 import React from 'react';
-import { createBrowserRouter, RouterProvider } from 'react-router-dom';
+import { Navigate, createBrowserRouter, RouterProvider, useLocation } from 'react-router-dom';
 import { Layout } from '@/components/layout';
-import { Auth, Home, MapPage, PlanTrip, ItineraryPage, MyTrips, NotFound } from '@/pages';
+import { useAuth } from '@/context';
+import { Auth, Home, PlanTrip, ItineraryPage, MyTrips, NotFound } from '@/pages';
+
+const HomeRoute: React.FC = () => {
+    const { isAuthenticated } = useAuth();
+    return isAuthenticated ? <Navigate to="/plan" replace /> : <Home />;
+};
+
+const AuthRoute: React.FC = () => {
+    const { isAuthenticated } = useAuth();
+    return isAuthenticated ? <Navigate to="/plan" replace /> : <Auth />;
+};
+
+const RequireAuth: React.FC<{ children: React.ReactElement }> = ({ children }) => {
+    const { isAuthenticated } = useAuth();
+    const location = useLocation();
+    if (!isAuthenticated) {
+        return <Navigate to="/auth" replace state={{ from: location.pathname }} />;
+    }
+    return children;
+};
 
 const router = createBrowserRouter([
     {
@@ -10,31 +30,43 @@ const router = createBrowserRouter([
         children: [
             {
                 index: true,
-                element: <Home />,
+                element: <HomeRoute />,
             },
             {
                 path: 'plan',
-                element: <PlanTrip />,
+                element: (
+                    <RequireAuth>
+                        <PlanTrip />
+                    </RequireAuth>
+                ),
             },
             {
                 path: 'auth',
-                element: <Auth />,
+                element: <AuthRoute />,
             },
             {
                 path: 'plan/result',
-                element: <ItineraryPage />,
+                element: (
+                    <RequireAuth>
+                        <ItineraryPage />
+                    </RequireAuth>
+                ),
             },
             {
                 path: 'itinerary/:id',
-                element: <ItineraryPage />,
-            },
-            {
-                path: 'itinerary/:id/map',
-                element: <MapPage />,
+                element: (
+                    <RequireAuth>
+                        <ItineraryPage />
+                    </RequireAuth>
+                ),
             },
             {
                 path: 'trips',
-                element: <MyTrips />,
+                element: (
+                    <RequireAuth>
+                        <MyTrips />
+                    </RequireAuth>
+                ),
             },
             {
                 path: '*',

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import type { TripFormData, TripProfile } from '@/types/trip';
+import { useAuth } from './AuthContext';
 import {
     saveDraftToStorage,
     loadDraftFromStorage,
@@ -27,6 +28,7 @@ interface TripProfileContextType {
 const TripProfileContext = createContext<TripProfileContextType | undefined>(undefined);
 
 export const TripProfileProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+    const { user } = useAuth();
     const [draftFormData, setDraftFormData] = useState<Partial<TripFormData> | null>(null);
     const [finalTripProfile, setFinalTripProfile] = useState<TripProfile | null>(null);
     const [allTripProfiles, setAllTripProfiles] = useState<TripProfile[]>([]);
@@ -38,9 +40,9 @@ export const TripProfileProvider: React.FC<{ children: ReactNode }> = ({ childre
             setDraftFormData(draft);
         }
 
-        const trips = loadTripProfiles();
+        const trips = loadTripProfiles(user?.id);
         setAllTripProfiles(trips);
-    }, []);
+    }, [user?.id]);
 
     const saveDraft = (data: Partial<TripFormData>) => {
         setDraftFormData(data);
@@ -53,14 +55,18 @@ export const TripProfileProvider: React.FC<{ children: ReactNode }> = ({ childre
     };
 
     const saveFinalTripProfile = (profile: TripProfile) => {
-        setFinalTripProfile(profile);
-        saveToStorage(profile);
+        const ownedProfile: TripProfile = {
+            ...profile,
+            userId: user?.id,
+        };
+        setFinalTripProfile(ownedProfile);
+        saveToStorage(ownedProfile, user?.id);
         refreshTrips();
         clearDraft(); // Clear draft after successful save
     };
 
     const refreshTrips = () => {
-        const trips = loadTripProfiles();
+        const trips = loadTripProfiles(user?.id);
         setAllTripProfiles(trips);
     };
 
