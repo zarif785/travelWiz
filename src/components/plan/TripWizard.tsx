@@ -64,7 +64,8 @@ export const TripWizard: React.FC = () => {
         register,
         watch,
         setValue,
-        trigger,
+        setError,
+        clearErrors,
         getValues,
         formState: { errors },
         reset,
@@ -104,8 +105,19 @@ export const TripWizard: React.FC = () => {
     const handleNext = async () => {
         const schema = STEP_SCHEMAS[currentStep];
         if (schema) {
-            const isValid = await trigger(Object.keys(schema.shape) as any);
-            if (!isValid) return;
+            clearErrors();
+            const result = schema.safeParse(getValues());
+            if (!result.success) {
+                result.error.issues.forEach((issue) => {
+                    if (issue.path.length > 0) {
+                        setError(issue.path.join('.') as any, {
+                            type: 'manual',
+                            message: issue.message,
+                        });
+                    }
+                });
+                return;
+            }
         }
 
         if (currentStep === STEP_TITLES.length - 2) {

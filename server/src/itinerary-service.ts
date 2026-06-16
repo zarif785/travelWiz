@@ -1,6 +1,5 @@
-import OpenAI from 'openai';
+import Anthropic from '@anthropic-ai/sdk';
 import { createHash, randomUUID } from 'node:crypto';
-import type { ChatCompletionMessageParam } from 'openai/resources/chat/completions';
 import {
     itinerarySchema,
     type Activity,
@@ -29,9 +28,9 @@ interface BuildResult {
     meta: ItineraryMeta;
 }
 
-const model = process.env.OPENAI_MODEL || 'gpt-4.1-mini';
-const openai = process.env.OPENAI_API_KEY
-    ? new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
+const model = process.env.ANTHROPIC_MODEL || 'claude-opus-4-8';
+const anthropic = process.env.ANTHROPIC_API_KEY
+    ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
     : null;
 
 const itineraryJsonSchema = {
@@ -501,60 +500,58 @@ function swapDays(currentItinerary: Itinerary, dayA: number, dayB: number): Itin
     });
 }
 
+function stripJsonFences(content: string): string {
+    const trimmed = content.trim();
+    const fenced = trimmed.match(/^```(?:json)?\s*([\s\S]*?)\s*```$/);
+    return fenced ? fenced[1].trim() : trimmed;
+}
+
 async function requestItineraryFromModel(
     routeType: RouteType,
     tripProfile: TripProfile,
     currentItinerary?: Itinerary,
     instruction?: string
 ): Promise<LlmAttemptResult> {
-    if (!openai) {
+    if (!anthropic) {
         return {
-            itinerary: buildFallbackItinerary(tripProfile, ['OPENAI_API_KEY is not configured on server.']),
+            itinerary: buildFallbackItinerary(tripProfile, ['ANTHROPIC_API_KEY is not configured on server.']),
             warnings: ['Used fallback itinerary because model client is unavailable.'],
         };
     }
 
-    const messages: ChatCompletionMessageParam[] = [
-        { role: 'system', content: buildSystemPrompt() },
-        {
-            role: 'developer',
-            content: buildDeveloperPrompt(routeType, instruction),
-        },
-        {
-            role: 'user',
-            content: makeUserPrompt(routeType, tripProfile, currentItinerary, instruction),
-        },
-    ];
+    const systemPrompt = `${buildSystemPrompt()}\n\n${buildDeveloperPrompt(routeType, instruction)}`;
+    const userPrompt = makeUserPrompt(routeType, tripProfile, currentItinerary, instruction);
 
     let lastError = 'Unknown validation error';
     let lastRaw = '';
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
-        const completion = await openai.chat.completions.create({
+        const messages: Anthropic.MessageParam[] = [{ role: 'user', content: userPrompt }];
+        if (attempt > 0) {
+            messages.push({
+                role: 'user',
+                content: [
+                    'Your previous output did not pass strict schema validation.',
+                    `Error summary: ${lastError}`,
+                    'Fix the JSON strictly to the schema.',
+                    'Return JSON only.',
+                    lastRaw ? `Previous output:\n${lastRaw}` : '',
+                ]
+                    .filter(Boolean)
+                    .join('\n'),
+            });
+        }
+
+        const completion = await anthropic.messages.create({
             model,
-            messages:
-                attempt === 0
-                    ? messages
-                    : [
-                          ...messages,
-                          {
-                              role: 'user',
-                              content: [
-                                  'Your previous output did not pass strict schema validation.',
-                                  `Error summary: ${lastError}`,
-                                  'Fix the JSON strictly to the schema.',
-                                  'Return JSON only.',
-                                  lastRaw ? `Previous output:\n${lastRaw}` : '',
-                              ]
-                                  .filter(Boolean)
-                                  .join('\n'),
-                          },
-                      ],
-            response_format: { type: 'json_object' },
-            temperature: 0.2,
+            max_tokens: 16000,
+            system: systemPrompt,
+            messages,
         });
 
-        const content = completion.choices[0]?.message?.content;
+        const content = completion.content
+            .map((block) => (block.type === 'text' ? block.text : ''))
+            .join('');
         if (!content) {
             lastError = 'Model returned empty content.';
             continue;
@@ -562,14 +559,14 @@ async function requestItineraryFromModel(
 
         lastRaw = content;
         try {
-            const parsed = JSON.parse(content) as unknown;
+            const parsed = JSON.parse(stripJsonFences(content)) as unknown;
             const normalized = normalizeItinerary(parsed, tripProfile);
             const itinerary = itinerarySchema.parse(normalized);
 
             return {
                 itinerary,
                 warnings: attempt > 0 ? ['Model output required retry-based JSON correction.'] : [],
-                tokens: completion.usage?.total_tokens,
+                tokens: completion.usage.input_tokens + completion.usage.output_tokens,
             };
         } catch (error) {
             lastError = error instanceof Error ? error.message : 'Unknown parse/validation error';
